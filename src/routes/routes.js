@@ -10,6 +10,12 @@ const renderController = require("../controllers/renderController");
 routes.post("/auth/login", userController.login);
 routes.post("/auth/register", userController.register);
 
+/*-----------------------------------------------------/
+/                  BACKEND USER ROUTES                 /
+/-----------------------------------------------------*/
+routes.delete("/users/delete", userController.authenticated, userController.delete);
+routes.put("/users/update", userController.authenticated, userController.update);
+
 routes.use(renderController.renderError);
 
 module.exports = routes;

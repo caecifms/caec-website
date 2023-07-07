@@ -6,6 +6,31 @@ const posts = require("../models/posts");
 const { Op } = require("sequelize");
 const { verify, sign } = require("jsonwebtoken");
 
+exports.authenticated = async (req, res, next) => {
+    const { caectoken } = req.cookies;
+    if (caectoken == undefined) {
+        return (res.sendStatus(401));
+    }
+    try {
+        const data = verify(caectoken, process.env.KEY);
+        if (data) {
+            const user = await users.findOne({
+                where: {
+                    id: data.id
+                }
+            })
+            if (user) {
+                req.user = user;
+                next();
+            }
+        }
+        return (res.sendStatus(401));
+    }
+    catch (error) {
+        return (res.sendStatus(500));
+    }
+}
+
 exports.login = async (req, res) => {
     const { email, password } = req.body;
     console.log(email, password)
@@ -67,4 +92,68 @@ exports.register = async (req, res) => {
     else {
         return (res.sendStatus(406));
     }
+}
+
+exports.delete = async (req, res) => {
+    if (id == undefined) {
+        return (res.sendStatus(400));
+    }
+    try {
+        const user = await users.destroy({
+            where: { id }
+        })
+        if (user > 0) {
+            return (res.sendStatus(200));
+        }
+        return (res.sendStatus(406));
+    } catch (error) {
+        return (res.sendStatus(500));
+    }
+}
+
+exports.update = async (req, res) => {
+    const { caectoken } = req.cookies;
+    const { change } = req.body;
+    const data = verify(caectoken, process.env.KEY);
+    if (data.id && change) {
+        if (!(change.name || change.surname || change.email || change.password)) {
+            return (res.sendStatus(406))
+        }
+        try {
+            const user = await users.findOne({
+                where: { id: data.id }
+            });
+            if (change.password) {
+                if (await bcrypt.compare(change.password, user.getDataValue("password"))) {
+                    return (res.sendStatus(406));
+                }
+                change.password = await bcrypt.hash(change.password, await bcrypt.genSalt(12));
+            }
+            if (change.name == user.getDataValue("name")) {
+                return (res.sendStatus(406));
+            }
+            if (change.surname == user.getDataValue("surname")) {
+                return (res.sendStatus(406));
+            }
+            if (change.email == user.getDataValue("email")) {
+                return (res.sendStatus(406));
+            }
+        } catch (error) {
+            return (res.sendStatus(500));
+        }
+        try {
+            const user = await users.update(change, {
+                where: { id }
+            })
+            if (user) {
+                return (res.sendStatus(202));
+            }
+            else {
+                return (res.sendStatus(406));
+            }
+        } catch (error) {
+            return (res.sendStatus(500));
+        }
+    }
+    return (res.sendStatus(400));
 }
