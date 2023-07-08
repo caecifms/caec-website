@@ -3,12 +3,11 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
-const database = require("./database");
-const router = require("./src/routes/routes")
+const router = require("./src/routes/routes");
 const app = express();
 
-app.set('views', path.join(__dirname, 'pages'));
-app.set('view engine', 'ejs');
+app.set("views", path.join(__dirname, "pages"));
+app.set("view engine", "ejs");
 
 app.use(cors());
 app.use(cookieParser());

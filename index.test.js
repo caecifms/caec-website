@@ -1,8 +1,9 @@
-const supertest = require("supertest");
+const request = require("supertest");
+const database = require("./database");
 const app = require("./server");
 
-describe('Sample Test', () => {
-    it('should test that true === true', () => {
-        expect(true).toBe(true)
-    })
-})
+describe("Write Tests", () => {
+  it("Should make tests", async () => {
+    expect(2 + 2).toEqual(4);
+  });
+});

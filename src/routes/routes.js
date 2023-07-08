@@ -13,9 +13,13 @@ routes.post("/auth/register", userController.register);
 /*-----------------------------------------------------/
 /                  BACKEND USER ROUTES                 /
 /-----------------------------------------------------*/
+routes.get("/isauth", userController.authenticated, (req, res) => {
+  res.send({ response: "authenticated" });
+});
+
 routes.delete("/users/delete", userController.authenticated, userController.delete);
 routes.put("/users/update", userController.authenticated, userController.update);
 
-routes.use(renderController.renderError);
+// routes.use(renderController.renderError);
 
 module.exports = routes;
