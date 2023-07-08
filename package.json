@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon index.js",
     "prod": "nodejs index.js",
-    "test": "jest"
+    "test": "jest --watch"
   },
   "author": "Centro Acadêmico de Engenharia de Computação - IFMS",
   "license": "MIT",

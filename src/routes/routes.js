@@ -7,16 +7,13 @@ const renderController = require("../controllers/renderController");
 /*-----------------------------------------------------/
 /                  BACKEND PUBLIC ROUTES               /
 /-----------------------------------------------------*/
-routes.post("/auth/login", userController.login);
-routes.post("/auth/register", userController.register);
+routes.post("/auth/sign-in", userController.signin);
+routes.post("/auth/sign-up", userController.signup);
+routes.get("/auth/sign-out", userController.signout);
 
 /*-----------------------------------------------------/
 /                  BACKEND USER ROUTES                 /
 /-----------------------------------------------------*/
-routes.get("/isauth", userController.authenticated, (req, res) => {
-  res.send({ response: "authenticated" });
-});
-
 routes.delete("/users/delete", userController.authenticated, userController.delete);
 routes.put("/users/update", userController.authenticated, userController.update);
 

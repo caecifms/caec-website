@@ -31,7 +31,7 @@ exports.authenticated = async (req, res, next) => {
   }
 };
 
-exports.login = async (req, res) => {
+exports.signin = async (req, res) => {
   const { email, password } = req.body;
   if (email == undefined || password == undefined) {
     return res.sendStatus(400);
@@ -64,7 +64,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.register = async (req, res) => {
+exports.signup = async (req, res) => {
   const { name, surname, email, ra, password } = req.body;
   if (
     name == undefined ||
@@ -75,40 +75,51 @@ exports.register = async (req, res) => {
   ) {
     return res.sendStatus(400);
   }
-
-  await users
-    .findOne({
+  try {
+    const data = await users.findOne({
       where: { [Op.or]: { email, ra } },
     })
-    .then(async (data) => {
-      if (!!!data) {
-        const hash = await bcrypt.hash(password, await bcrypt.genSalt(12));
-        if (hash) {
-          try {
-            var newUser = await users.create({
-              name,
-              surname,
-              email,
-              ra,
-              password: hash,
-              isStudent: false,
-              admin: false,
-            });
-            if (!!newUser) {
-              return res.sendStatus(200);
-            }
-          } catch (error) {
-            return res.sendStatus(500);
+    if (!!!data) {
+      const hash = await bcrypt.hash(password, await bcrypt.genSalt(12));
+      if (hash) {
+        try {
+          var newUser = await users.create({
+            name,
+            surname,
+            email,
+            ra,
+            password: hash,
+            isStudent: false,
+            admin: false,
+          });
+          if (!!newUser) {
+            return res.sendStatus(200);
           }
-        } else {
-          res.sendStatus(500);
+        } catch (error) {
+          return res.sendStatus(500);
         }
       } else {
-        return res.sendStatus(406);
+        res.sendStatus(500);
       }
-    })
-    .catch((error) => { });
+    } else {
+      return res.sendStatus(406);
+    }
+  }
+  catch (error) {
+    console.log(error);
+  }
 };
+
+exports.signout = (req, res) => {
+  const { caectoken } = req.cookies;
+  if (caectoken) {
+    res.clearCookie('caectoken');
+    return (res.sendStatus(200));
+  }
+  else {
+    return (res.sendStatus(406));
+  }
+}
 
 exports.delete = async (req, res) => {
   try {
@@ -116,6 +127,7 @@ exports.delete = async (req, res) => {
       where: { id: req.user.id }
     })
     if (user > 0) {
+      res.clearCookie('caectoken');
       return (res.sendStatus(202));
     }
     return (res.sendStatus(406));

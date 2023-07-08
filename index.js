@@ -1,8 +1,15 @@
 const app = require("./server");
-const database = require("./database");
+const { sequelize } = require("./database");
 
 app.listen(process.env.PORT, async () => {
-  await database.checkConnection();
-  await database.sequelize.sync({ logging: false, force: false });
+  try
+  {
+    await sequelize.authenticate();
+    await sequelize.sync({ logging: false, force: false });
+  }
+  catch(error)
+  {
+    console.log(error);
+  }
   console.log("Servidor iniciado!");
 });
