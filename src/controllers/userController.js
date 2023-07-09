@@ -13,54 +13,20 @@ exports.authenticated = async (req, res, next) => {
   }
   try {
     const data = verify(caectoken, process.env.KEY);
-    await users
-      .findOne({
-        where: {
-          id: data.id,
-        },
+    const user = await users.findOne({
+        where: { id: data.id }
       })
-      .then((user) => {
+      if(!!user)
+      {
         req.user = user;
         next();
-      })
-      .catch((error) => {
-        return res.sendStatus(401);
-      });
-  } catch (error) {
-    return res.sendStatus(401);
-  }
-};
-
-exports.signin = async (req, res) => {
-  const { email, password } = req.body;
-  if (email == undefined || password == undefined) {
-    return res.sendStatus(400);
-  }
-  try {
-    const user = await users.findOne({
-      where: { email },
-    });
-    if (user) {
-      const unhashed = await bcrypt.compare(password, user.password);
-      if (unhashed) {
-        const token = sign(
-          { id: user.id, admin: user.admin },
-          process.env.KEY,
-          { expiresIn: "4h" }
-        );
-        res.cookie("caectoken", token, { httpOnly: true, secure: false });
-        return res.status(200).json({
-          status: "Success",
-          message: "Authentication successful",
-          token,
-          name: user.name,
-        });
       }
-    }
-    return res.sendStatus(401);
+      else
+      {
+        return res.sendStatus(401);
+      }
   } catch (error) {
-    console.log(error);
-    return res.sendStatus(500);
+    return res.sendStatus(401);
   }
 };
 
@@ -110,6 +76,39 @@ exports.signup = async (req, res) => {
   }
 };
 
+exports.signin = async (req, res) => {
+  const { email, password } = req.body;
+  if (email == undefined || password == undefined) {
+    return res.sendStatus(400);
+  }
+  try {
+    const user = await users.findOne({
+      where: { email },
+    });
+    if (user) {
+      const unhashed = await bcrypt.compare(password, user.password);
+      if (unhashed) {
+        const token = sign(
+          { id: user.id, admin: user.admin },
+          process.env.KEY,
+          { expiresIn: "4h" }
+        );
+        res.cookie("caectoken", token, { httpOnly: true, secure: false });
+        return res.status(200).json({
+          status: "Success",
+          message: "Authentication successful",
+          token,
+          name: user.name,
+        });
+      }
+    }
+    return res.sendStatus(401);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(500);
+  }
+};
+
 exports.signout = (req, res) => {
   const { caectoken } = req.cookies;
   if (caectoken) {
@@ -135,7 +134,6 @@ exports.delete = async (req, res) => {
     return (res.sendStatus(500));
   }
 }
-
 
 exports.update = async (req, res) => {
   const { change } = req.body;
@@ -168,11 +166,12 @@ exports.update = async (req, res) => {
         return res.sendStatus(406);
       }
     } catch (error) {
+      console.log(error);
       return res.sendStatus(500);
     }
     try {
       const user = await users.update(change, {
-        where: { id },
+        where: { id: req.user.id },
       });
       if (user) {
         return res.sendStatus(202);
@@ -180,6 +179,7 @@ exports.update = async (req, res) => {
         return res.sendStatus(406);
       }
     } catch (error) {
+      console.log(error);
       return res.sendStatus(500);
     }
   }

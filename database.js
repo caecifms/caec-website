@@ -8,5 +8,5 @@ exports.sequelize = new Sequelize(process.env.DATABASE_URL_CONNECTION, {
       rejectUnauthorized: false,
     },
   },
-  logging: false,
+  logging: false
 });
