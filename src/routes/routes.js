@@ -16,7 +16,13 @@ routes.get("/auth/sign-out", userController.signout);
 /-----------------------------------------------------*/
 routes.delete("/users/delete", userController.authenticated, userController.delete);
 routes.put("/users/update", userController.authenticated, userController.update);
+routes.post("/newpost", userController.authenticated, postController.createNewPost);
 
-// routes.use(renderController.renderError);
+/*-----------------------------------------------------/
+/               BACKEND PROTECTED ROUTES               /
+/-----------------------------------------------------*/
+routes.put("/restrict/changeAdminPermissions", userController.authenticated, userController.protected, userController.changeAdminPermissions);
+
+routes.use(renderController.renderError);
 
 module.exports = routes;

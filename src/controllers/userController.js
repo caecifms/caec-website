@@ -14,21 +14,42 @@ exports.authenticated = async (req, res, next) => {
   try {
     const data = verify(caectoken, process.env.KEY);
     const user = await users.findOne({
-        where: { id: data.id }
-      })
-      if(!!user)
-      {
-        req.user = user;
-        next();
-      }
-      else
-      {
-        return res.sendStatus(401);
-      }
+      where: { id: data.id }
+    })
+    if (user) {
+      req.user = user;
+      next();
+    }
+    else {
+      return res.sendStatus(401);
+    }
   } catch (error) {
     return res.sendStatus(401);
   }
 };
+
+exports.protected = (req, res, next) => {
+  try {
+    if (req.user.admin == true) {
+      next();
+    }
+    else {
+      return (res.sendStatus(401));
+    }
+  }
+  catch (error) {
+    console.log(error);
+    return (res.sendStatus(500));
+  }
+}
+
+async function isValidID(id) {
+  const user = await users.findOne({ where: id });
+  if (user == null) {
+    return false;
+  }
+  return true;
+}
 
 exports.signup = async (req, res) => {
   const { name, surname, email, ra, password } = req.body;
@@ -45,7 +66,7 @@ exports.signup = async (req, res) => {
     const data = await users.findOne({
       where: { [Op.or]: { email, ra } },
     })
-    if (!!!data) {
+    if (!data) {
       const hash = await bcrypt.hash(password, await bcrypt.genSalt(12));
       if (hash) {
         try {
@@ -58,7 +79,7 @@ exports.signup = async (req, res) => {
             isStudent: false,
             admin: false,
           });
-          if (!!newUser) {
+          if (newUser) {
             return res.sendStatus(200);
           }
         } catch (error) {
@@ -137,7 +158,7 @@ exports.delete = async (req, res) => {
 
 exports.update = async (req, res) => {
   const { change } = req.body;
-  if (!!change) {
+  if (change) {
     if (!(change.name || change.surname || change.email || change.password)) {
       return res.sendStatus(406);
     }
@@ -185,3 +206,21 @@ exports.update = async (req, res) => {
   }
   return res.sendStatus(400);
 };
+
+exports.changeAdminPermissions = async (req, res) => {
+  const { id, change } = req.body;
+  try
+  {
+    const user = await users.update({ admin: change }, {
+      where: { id }
+    });
+    if(user)
+    {
+      return res.sendStatus(200);
+    }
+  }
+  catch(error)
+  {
+    return res.sendStatus(500);
+  }
+}
